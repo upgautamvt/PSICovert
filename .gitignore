@@ -1,0 +1,24 @@
+# Ignore CLion project settings
+.idea/
+
+# Ignore build output directory
+build/
+
+# Ignore CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Ignore executable files and object files
+*.o
+*.obj
+*.so
+*.a
+*.out
+*.exe
+
+# Ignore temporary and backup files
+*~
+*.swp
+*.swo

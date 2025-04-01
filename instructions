@@ -1,0 +1,16 @@
+mkdir build
+cd build
+cmake ..
+make
+
+upgautam@amd:~/CLionProjects/PSICovertChannel/build$ sudo ./CgroupPsi1
+[sudo] password for upgautam:
+Created (or already exists) cgroup at: /sys/fs/cgroup/psicgroup1
+Child process P1 (PID 2813275) started.
+Child process P2 (PID 2813276) started.
+Added P1 (PID 2813275) and P2 (PID 2813276) to cgroup /sys/fs/cgroup/psicgroup1
+
+Memory Pressure Stall Information (PSI) for cgroup '/sys/fs/cgroup/psicgroup1':
+some avg10=0.00 avg60=0.00 avg300=0.00 total=0
+full avg10=0.00 avg60=0.00 avg300=0.00 total=0
+
