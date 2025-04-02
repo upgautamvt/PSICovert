@@ -1,25 +1,11 @@
+upgautamvt@upgautamlenovo:~/CLionProjects/PSICovert/build$ mount | grep cgroup
+cgroup2 on /sys/fs/cgroup type cgroup2 (rw,nosuid,nodev,noexec,relatime,nsdelegate,memory_recursiveprot)
+
+upgautamvt@upgautamlenovo:~/CLionProjects/PSICovert/build$ stat -fc %T /sys/fs/cgroup/
+cgroup2fs
+
+
 mkdir build
 cd build
 cmake ..
 make
-
-upgautam@amd:~/CLionProjects/PSICovertChannel/build$ sudo ./CgroupPsi1
-[sudo] password for upgautam:
-Created (or already exists) cgroup at: /sys/fs/cgroup/psicgroup1
-Child process P1 (PID 2813275) started.
-Child process P2 (PID 2813276) started.
-Added P1 (PID 2813275) and P2 (PID 2813276) to cgroup /sys/fs/cgroup/psicgroup1
-
-Memory Pressure Stall Information (PSI) for cgroup '/sys/fs/cgroup/psicgroup1':
-some avg10=0.00 avg60=0.00 avg300=0.00 total=0
-full avg10=0.00 avg60=0.00 avg300=0.00 total=0
-
-
-cat /sys/fs/cgroup/psicgroup1/cgroup.procs
-    In Linux cgroups, when a process that has been added to a cgroup terminates,
-    it is automatically removed from the cgroup's cgroup.procs file. This means that once
-    your child processes complete their execution (after the 30-second sleep in your code), they exit,
-    and the cgroup becomes empty. Therefore, checking cgroup.procs after
-    the processes have finished will show no active PIDs.
-
-cat /sys/fs/cgroup/psicgroup1/memory.pressure
