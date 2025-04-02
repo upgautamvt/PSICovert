@@ -1,11 +1,16 @@
-upgautamvt@upgautamlenovo:~/CLionProjects/PSICovert/build$ mount | grep cgroup
-cgroup2 on /sys/fs/cgroup type cgroup2 (rw,nosuid,nodev,noexec,relatime,nsdelegate,memory_recursiveprot)
+Prerequisites
+    upgautamvt@upgautamlenovo:~/CLionProjects/PSICovert/build$ mount | grep cgroup
+    cgroup2 on /sys/fs/cgroup type cgroup2 (rw,nosuid,nodev,noexec,relatime,nsdelegate,memory_recursiveprot)
 
-upgautamvt@upgautamlenovo:~/CLionProjects/PSICovert/build$ stat -fc %T /sys/fs/cgroup/
-cgroup2fs
+    upgautamvt@upgautamlenovo:~/CLionProjects/PSICovert/build$ stat -fc %T /sys/fs/cgroup/
+    cgroup2fs
+
+Build
+    mkdir build
+    cd build
+    cmake ..
+    make
 
 
-mkdir build
-cd build
-cmake ..
-make
+To watch
+    watch -n 1 cat /sys/fs/cgroup/memory_stress/memory.pressure
