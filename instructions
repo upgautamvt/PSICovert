@@ -13,4 +13,9 @@ Build
 
 
 To watch
+    upgautamvt@upgautamlenovo:~$ ls -l /sys/fs/cgroup/memory_stress/memory.pressure
+    -rw-r--r-- 1 root root 0 Apr  1 23:03 /sys/fs/cgroup/memory_stress/memory.pressure
+    file has write (-rw-r--r--) permissions for root but only read (r--r--r--) for others, any user can read it.
+    (Trojan or Attacker can be any process who has read permission)
+
     watch -n 1 cat /sys/fs/cgroup/memory_stress/memory.pressure
