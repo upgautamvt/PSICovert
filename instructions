@@ -19,3 +19,14 @@ To watch
     (Trojan or Attacker can be any process who has read permission)
 
     watch -n 1 cat /sys/fs/cgroup/memory_stress/memory.pressure
+
+Debug
+    upgautam@amd:~/CLionProjects/PSICovertChannel/build$ gcc -g -o CovertChannel1 ../src/CovertChannel1.c
+    perf stat -e branches,branch-misses ./CovertChannel1 0 //monitor branch misses
+    Must use vulnerable hardware (pre-2018 CPUs)
+    Disable software mitigation using
+        # Check active mitigations
+        cat /sys/devices/system/cpu/vulnerabilities/spectre_v1
+
+        # Disable (temporarily for testing):
+        sudo sysctl -w kernel.spectre_v2_user=off

